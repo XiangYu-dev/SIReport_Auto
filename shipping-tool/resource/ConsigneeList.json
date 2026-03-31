@@ -1,0 +1,44 @@
+{
+  "GLOBE": {
+    "name": "GLOBE FOOTWEAR CORP.",
+    "address": "190 WESTFIELD AVENUE WEST ROSELLE PARK, NJ 07204",
+    "marks": "CS\nNY USA\nPO #\nCASE#\nMADE IN CHINA",
+    "notify_name": "DSV AIR & SEA, INC.",
+    "notify_address": "100 WALNUT AVENUE, SUITE 405 CLARK, NJ 07066",
+    "notify_tel": "732 850 8000 EXT 2193",
+    "notify_fax": "732 850 8040",
+    "forwarder_name": "HECNY Transportation (Shanghai) Ltd - Shenzhen Branch",
+    "forwarder_deputy": "Julian Yi",
+    "forwarder_tel": "0755-82212591",
+    "forwarder_email": "julianyi@hecny.com",
+    "forwarder_address": "43/F, International Trade Center Building, No. 3002, Renmin South Road"
+  },
+  "TEST1": {
+    "name": "測試客戶A",
+    "address": "測試地址A",
+    "marks": "TA",
+    "notify_name": "測試通知方A",
+    "notify_address": "測試通知地址A",
+    "notify_tel": "",
+    "notify_fax": "",
+    "forwarder_name": "測試貨代A",
+    "forwarder_deputy": "測試聯絡人A",
+    "forwarder_tel": "",
+    "forwarder_email": "",
+    "forwarder_address": ""
+  },
+  "TEST2": {
+    "name": "測試客戶B",
+    "address": "測試地址B",
+    "marks": "TB",
+    "notify_name": "測試通知方B",
+    "notify_address": "測試通知地址B",
+    "notify_tel": "",
+    "notify_fax": "",
+    "forwarder_name": "測試貨代B",
+    "forwarder_deputy": "測試聯絡人B",
+    "forwarder_tel": "",
+    "forwarder_email": "",
+    "forwarder_address": ""
+  }
+}
