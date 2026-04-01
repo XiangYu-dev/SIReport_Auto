@@ -14,7 +14,7 @@ import CONSIGNEE_DB from '../resource/ConsigneeList.json';
   let rowNOTIFY = rowCONSIGNEE+3;
   let rowFROM = rowNOTIFY+4;
   let rowMARKS = rowFROM+2;
-  let rowORDERNO = rowMARKS;
+  let rowORDERNO = rowMARKS+1;
   let rowGW = rowMARKS+1;
   let rowCBM = rowGW+1;
   let rowQTY = rowCBM+1;
@@ -231,7 +231,13 @@ export default function App() {
       siSheet.getCell(`A${rowMARKS + 1 + index}`).value = line;
     });
     siSheet.getCell(`C${rowMARKS}`).value = `P/I #${formData.pi}`;
-    siSheet.getCell(`D${rowORDERNO}`).value = `Order No. ${orderNoList.join(', ')}`;
+    siSheet.getCell(`C${rowORDERNO}`).value = 'PO#';
+    orderNoList.forEach((po, i) => {
+      const rowOffset = Math.floor(i / 4);
+      const colOffset = i % 4;
+      const col = String.fromCharCode(68 + colOffset);
+      siSheet.getCell(`${col}${rowORDERNO + rowOffset}`).value = po;
+    });
 
     siSheet.getCell(`H${rowGW}`).value = 'G.W.(kgs) :';
     siSheet.getCell(`I${rowGW}`).value = totals.gw;
@@ -313,7 +319,13 @@ export default function App() {
     plSheet.getCell('A2').value = `DATE : ${formData.date}`;
     plSheet.getCell('J2').value = `NY USA`;
     plSheet.getCell('A3').value = `PACKING LIST OF ${totals.ctns} CTNS`;
-    plSheet.getCell('J3').value = `PO # ${orderNoList.join(', ')}`;
+    plSheet.getCell('J3').value = 'PO#';
+    orderNoList.forEach((po, i) => {
+      const rowOffset = Math.floor(i / 4);
+      const colOffset = i % 4;
+      const col = String.fromCharCode(75 + colOffset); // K=75
+      plSheet.getCell(`${col}${3 + rowOffset}`).value = po;
+    });
     plSheet.getCell('A4').value = `FROM : ${formData.from}`;
     plSheet.getCell('F4').value = `TO : ${formData.toDestination}`;
     plSheet.getCell('J4').value = `CASE#`;
@@ -417,7 +429,7 @@ export default function App() {
             }`}
           >
             <FileSpreadsheet size={20} />
-            {isProcessing ? '資料解析中...' : '產生 Excel 檔案'}
+            {isProcessing ? '資料解析中...' : '產生 SI 檔案'}
           </button>
         </div>
 
@@ -536,7 +548,7 @@ export default function App() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Order No.</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">PO#</label>
               <input className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50" value={orderNoList.join(', ')} readOnly placeholder="上傳 PL 檔案後自動帶入" />
             </div>
 
