@@ -227,7 +227,7 @@ export default function App() {
       { width: 9.22 },    // F
       { width: 9 },       // G
       { width: 15.66 },   // H
-      { width: 10 },      // I
+      { width: 12 },      // I
     ];
 
     siSheet.getCell(`A${rowStart}`).value = 'SHIPMENT INSTRUCTION';
@@ -282,20 +282,22 @@ export default function App() {
         
         siSheet.getCell(`H${currentRow}`).value = 'G.W.(kgs) :';
         siSheet.getCell(`I${currentRow}`).value = stat.gw;
-        siSheet.getCell(`I${currentRow}`).numFmt = '0.00';
+        siSheet.getCell(`I${currentRow}`).numFmt = '0.000';
         currentRow++;
         
         siSheet.getCell(`H${currentRow}`).value = 'CBM:';
         siSheet.getCell(`I${currentRow}`).value = stat.cbm;
-        siSheet.getCell(`I${currentRow}`).numFmt = '0.000000';
+        siSheet.getCell(`I${currentRow}`).numFmt = '0.000';
         currentRow++;
         
         siSheet.getCell(`H${currentRow}`).value = "Q'NTY(prs) :";
         siSheet.getCell(`I${currentRow}`).value = stat.prs;
+        siSheet.getCell(`I${currentRow}`).numFmt = '0.000';
         currentRow++;
         
         siSheet.getCell(`H${currentRow}`).value = 'CTNS:';
         siSheet.getCell(`I${currentRow}`).value = stat.ctns;
+        siSheet.getCell(`I${currentRow}`).numFmt = '0.000';
         currentRow++;
       }
       
@@ -305,20 +307,22 @@ export default function App() {
         
         siSheet.getCell(`H${currentRow}`).value = 'G.W.(kgs) :';
         siSheet.getCell(`I${currentRow}`).value = totals.gw;
-        siSheet.getCell(`I${currentRow}`).numFmt = '0.00';
+        siSheet.getCell(`I${currentRow}`).numFmt = '0.000';
         currentRow++;
         
         siSheet.getCell(`H${currentRow}`).value = 'CBM:';
         siSheet.getCell(`I${currentRow}`).value = totals.cbm;
-        siSheet.getCell(`I${currentRow}`).numFmt = '0.000000';
+        siSheet.getCell(`I${currentRow}`).numFmt = '0.000';
         currentRow++;
         
         siSheet.getCell(`H${currentRow}`).value = "Q'NTY(prs) :";
         siSheet.getCell(`I${currentRow}`).value = totals.prs;
+        siSheet.getCell(`I${currentRow}`).numFmt = '0.000';
         currentRow++;
         
         siSheet.getCell(`H${currentRow}`).value = 'CTNS:';
         siSheet.getCell(`I${currentRow}`).value = totals.ctns;
+        siSheet.getCell(`I${currentRow}`).numFmt = '0.000';
         currentRow++;
       }
       
@@ -531,59 +535,126 @@ export default function App() {
   const isFormValid = formData.pi && formData.date && uploadedFiles.length > 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="max-w-[1600px] mx-auto space-y-6">
         
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">出貨文件自動化系統</h1>
-            <p className="text-gray-500 mt-1">無需伺服器，純前端高速解析與合併 PI Excel</p>
+        {/* 區塊1: 出貨文件自動化系統 - 懸空至頂 */}
+        <div className="sticky top-0 z-50 bg-gradient-to-r from-blue-600 to-blue-700 p-4 md:p-6 rounded-2xl shadow-lg flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="text-center md:text-left">
+            <h1 className="text-3xl md:text-4xl font-bold text-white">文件自動化系統</h1>
+            <p className="text-blue-100 mt-2 text-lg">前端解析與合併 PI Excel</p>
           </div>
           <button 
             onClick={generateExcel}
             disabled={!isFormValid || isProcessing}
-            className={`px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-all ${
-              isFormValid && !isProcessing ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md' : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            className={`px-8 py-4 rounded-xl font-bold flex items-center gap-3 text-lg transition-all shadow-lg ${
+              isFormValid && !isProcessing ? 'bg-white text-blue-600 hover:bg-blue-50' : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >
-            <FileSpreadsheet size={20} />
+            <FileSpreadsheet size={24} />
             {isProcessing ? '資料解析中...' : '產生 SI 檔案'}
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
-          {/* 左側：表單區域 */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-5">
-            <h2 className="text-lg font-bold border-b pb-2 mb-4">PI 基本資訊</h2>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">PI#</label>
-                <input className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.pi} onChange={e => setFormData({...formData, pi: e.target.value})} />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Date</label>
-                <input type="date" className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} />
-              </div>
-            </div>
+        {/* 區塊2: 拖曳上傳區 - 改為橫向排列 */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div 
+            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+            className={`bg-white p-6 rounded-xl border-2 border-dashed flex flex-col items-center justify-center text-center transition-all min-h-[200px] ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
+          >
+            <UploadCloud className="text-gray-400 mb-3" size={48} />
+            <p className="text-gray-700 font-semibold">拖曳 PL (Excel) 檔案至此</p>
+            <p className="text-gray-400 text-sm mt-1 mb-4">或點擊下方按鈕選擇檔案 (可多選)</p>
+            <label className="bg-white border shadow-sm px-4 py-2 rounded cursor-pointer hover:bg-gray-50 text-sm font-semibold">
+              瀏覽檔案
+              <input type="file" multiple accept=".xlsx" className="hidden" onChange={(e) => setUploadedFiles(prev => [...prev, ...Array.from(e.target.files)])} />
+            </label>
+          </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">FM</label>
-                <select className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.fm} onChange={e => setFormData({...formData, fm: e.target.value})}>
-                  <option value="巨瑞/Michelle">巨瑞/Michelle</option>
-                  <option value="巨瑞/Shirely">巨瑞/Shirely</option>
-                </select>
+          {/* 右側：上傳檔案預覽區塊 */}
+          {uploadedFiles.length > 0 ? (
+            <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-bold">已上傳檔案預覽</h2>
+                <button onClick={() => setUploadedFiles([])} className="text-sm text-red-500 hover:text-red-700 flex items-center gap-1"><Trash2 size={14}/> 清空</button>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">TO</label>
-                <select className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.to} onChange={e => setFormData({...formData, to: e.target.value})}>
-                  <option value="K&A/Sandra">K&A/Sandra</option>
-                  <option value=""></option>
-                </select>
+              
+              <div className="space-y-3 mb-6">
+                {fileStats.map((stat, i) => (
+                  <div key={i} className="flex justify-between items-center p-3 bg-gray-50 rounded border">
+                    <div className="flex items-center gap-2">
+                      <FileSpreadsheet size={16} className="text-green-600" />
+                      <span className="font-medium text-sm text-gray-700 truncate max-w-[150px]">{stat.name}</span>
+                    </div>
+                    <div className="flex gap-4 text-sm text-gray-600">
+                      <span>訂單: <b>{stat.orders}</b></span>
+                      <span>CTNS: <b>{stat.ctns}</b></span>
+                      <span>PRS: <b>{stat.prs}</b></span>
+                    </div>
+                    {stat.warning && <AlertCircle size={16} className="text-orange-500 ml-2" title="TOTAL 列與系統加總不符" />}
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                <h3 className="font-bold text-blue-800 mb-3 text-sm">彙總數據計算 (將帶入 SI Sheet)</h3>
+                <div className="grid grid-cols-4 gap-4 text-center">
+                  <div>
+                    <p className="text-xs text-blue-600 font-semibold mb-1">總箱數 (CTNS)</p>
+                    <p className="text-xl font-bold text-blue-900">{totals.ctns}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-blue-600 font-semibold mb-1">總雙數 (PRS)</p>
+                    <p className="text-xl font-bold text-blue-900">{totals.prs}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-blue-600 font-semibold mb-1">總毛重 (G.W.)</p>
+                    <p className="text-xl font-bold text-blue-900">{totals.gw.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-blue-600 font-semibold mb-1">總體積 (CBM)</p>
+                    <p className="text-xl font-bold text-blue-900">{totals.cbm.toFixed(6)}</p>
+                  </div>
+                </div>
               </div>
             </div>
+          ) : (
+            <div className="lg:col-span-2 bg-gray-100 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center min-h-[200px]">
+              <p className="text-gray-400">上傳檔案後顯示預覽</p>
+            </div>
+          )}
+        </div>
+
+        {/* 區塊3: PI基本資訊 - 全寬顯示 */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-5">
+          <h2 className="text-lg font-bold border-b pb-2 mb-4">PI 基本資訊</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">PI#</label>
+              <input className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.pi} onChange={e => setFormData({...formData, pi: e.target.value})} />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Date</label>
+              <input type="date" className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">FM</label>
+              <select className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.fm} onChange={e => setFormData({...formData, fm: e.target.value})}>
+                <option value="巨瑞/Michelle">巨瑞/Michelle</option>
+                <option value="巨瑞/Shirely">巨瑞/Shirely</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">TO</label>
+              <select className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.to} onChange={e => setFormData({...formData, to: e.target.value})}>
+                <option value="K&A/Sandra">K&A/Sandra</option>
+                <option value=""></option>
+              </select>
+            </div>
+          </div>
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">SHIPPER</label>
@@ -662,7 +733,7 @@ export default function App() {
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">P/I {formData.pi}</label>
-              <textarea rows="5" className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50" value={`P/I #${formData.pi}`} readOnly />
+              <textarea rows="3" className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50" value={`P/I #${formData.pi}`} readOnly />
             </div>
 
             <div>
@@ -670,55 +741,46 @@ export default function App() {
               <input className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50" value={orderNoList.join(', ')} readOnly placeholder="上傳 PL 檔案後自動帶入" />
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">G.W.(kgs)</label>
-              <input className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.gw} onChange={e => setFormData({...formData, gw: e.target.value})} placeholder={totals.gw.toFixed(2)} />
+            {/* 數量相關欄位 - 排列在一起 */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">CTNS</label>
+                <input className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.ctns} onChange={e => setFormData({...formData, ctns: e.target.value})} placeholder={totals.ctns.toString()} />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Q'NTY(prs)</label>
+                <input className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.qty} onChange={e => setFormData({...formData, qty: e.target.value})} placeholder={totals.prs.toString()} />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">G.W.(kgs)</label>
+                <input className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.gw} onChange={e => setFormData({...formData, gw: e.target.value})} placeholder={totals.gw.toFixed(2)} />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">CBM</label>
+                <input className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.cbm} onChange={e => setFormData({...formData, cbm: e.target.value})} placeholder={totals.cbm.toFixed(6)} />
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">CBM</label>
-              <input className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.cbm} onChange={e => setFormData({...formData, cbm: e.target.value})} placeholder={totals.cbm.toFixed(6)} />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Q'NTY(prs)</label>
-              <input className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.qty} onChange={e => setFormData({...formData, qty: e.target.value})} placeholder={totals.prs.toString()} />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">CTNS</label>
-              <input className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.ctns} onChange={e => setFormData({...formData, ctns: e.target.value})} placeholder={totals.ctns.toString()} />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Cargo Ready Date</label>
                 <input type="date" className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.cargoReadyDate} onChange={e => setFormData({...formData, cargoReadyDate: e.target.value})} />
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Shipping term</label>
-                <select className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.shippingTerm} onChange={e => setFormData({...formData, shippingTerm: e.target.value})}>
-                  <option value="FOB">FOB</option>
-                  <option value="CIF">CIF</option>
-                  <option value="ETA">ETA</option>
-                  <option value="ETD">ETD</option>
-                </select>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Shipping term</label>
+                  <select className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.shippingTerm} onChange={e => setFormData({...formData, shippingTerm: e.target.value})}>
+                    <option value="FOB">FOB</option>
+                    <option value="CIF">CIF</option>
+                    <option value="ETA">ETA</option>
+                    <option value="ETD">ETD</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Shipping term2</label>
+                  <input className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.shippingTerm2} onChange={e => setFormData({...formData, shippingTerm2: e.target.value})} />
+                </div>
               </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Shipping term2</label>
-              <input className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.shippingTerm2} onChange={e => setFormData({...formData, shippingTerm2: e.target.value})} />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Shipped By</label>
-              <select className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.shippedBy} onChange={e => setFormData({...formData, shippedBy: e.target.value})}>
-                <option value="1x40'HQ">1x40'HQ</option>
-                <option value="1x40'GP">1x40'GP</option>
-                <option value="1x20'">1x20'</option>
-                <option value="LCL">LCL</option>
-              </select>
             </div>
 
             <div>
@@ -754,25 +816,37 @@ export default function App() {
             <div className="pt-4 border-t">
               <h3 className="text-lg font-bold border-b pb-2 mb-4">其他</h3>
               
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-1">需否申請 CO</label>
-                <select className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.needCO} onChange={e => setFormData({...formData, needCO: e.target.value})}>
-                  <option value="">請選擇</option>
-                  <option value="不需">不需</option>
-                  <option value="需要">需要</option>
-                </select>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">需否申請 CO</label>
+                  <select className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.needCO} onChange={e => setFormData({...formData, needCO: e.target.value})}>
+                    <option value="">請選擇</option>
+                    <option value="不需">不需</option>
+                    <option value="需要">需要</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">文件負責方</label>
+                  <select className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.documentOwner} onChange={e => setFormData({...formData, documentOwner: e.target.value})}>
+                    <option value="">請選擇</option>
+                    <option value="巨瑞">巨瑞</option>
+                    <option value="其他">其他</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Shipped By</label>
+                  <select className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.shippedBy} onChange={e => setFormData({...formData, shippedBy: e.target.value})}>
+                    <option value="1x40'HQ">1x40'HQ</option>
+                    <option value="1x40'GP">1x40'GP</option>
+                    <option value="1x20'">1x20'</option>
+                    <option value="LCL">LCL</option>
+                  </select>
+                </div>
               </div>
 
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-1">文件負責方</label>
-                <select className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.documentOwner} onChange={e => setFormData({...formData, documentOwner: e.target.value})}>
-                  <option value="">請選擇</option>
-                  <option value="巨瑞">巨瑞</option>
-                  <option value="其他">其他</option>
-                </select>
-              </div>
-
-              <div>
+              <div className="mt-4">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">船運單</label>
                 <div className="flex flex-wrap gap-4">
                   <label className="flex items-center gap-2 cursor-pointer text-gray-700">
@@ -798,74 +872,6 @@ export default function App() {
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* 右側：上傳與預覽區域 */}
-          <div className="space-y-6">
-            <div 
-              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-              onDragLeave={() => setIsDragging(false)}
-              onDrop={handleDrop}
-              className={`bg-white p-8 rounded-xl border-2 border-dashed flex flex-col items-center justify-center text-center transition-all min-h-[200px] ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
-            >
-              <UploadCloud className="text-gray-400 mb-3" size={48} />
-              <p className="text-gray-700 font-semibold">拖曳 PL (Excel) 檔案至此</p>
-              <p className="text-gray-400 text-sm mt-1 mb-4">或點擊下方按鈕選擇檔案 (可多選)</p>
-              <label className="bg-white border shadow-sm px-4 py-2 rounded cursor-pointer hover:bg-gray-50 text-sm font-semibold">
-                瀏覽檔案
-                <input type="file" multiple accept=".xlsx" className="hidden" onChange={(e) => setUploadedFiles(prev => [...prev, ...Array.from(e.target.files)])} />
-              </label>
-            </div>
-
-            {uploadedFiles.length > 0 && (
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-bold">已上傳檔案預覽</h2>
-                  <button onClick={() => setUploadedFiles([])} className="text-sm text-red-500 hover:text-red-700 flex items-center gap-1"><Trash2 size={14}/> 清空</button>
-                </div>
-                
-                <div className="space-y-3 mb-6">
-                  {fileStats.map((stat, i) => (
-                    <div key={i} className="flex justify-between items-center p-3 bg-gray-50 rounded border">
-                      <div className="flex items-center gap-2">
-                        <FileSpreadsheet size={16} className="text-green-600" />
-                        <span className="font-medium text-sm text-gray-700 truncate max-w-[150px]">{stat.name}</span>
-                      </div>
-                      <div className="flex gap-4 text-sm text-gray-600">
-                        <span>訂單: <b>{stat.orders}</b></span>
-                        <span>CTNS: <b>{stat.ctns}</b></span>
-                        <span>PRS: <b>{stat.prs}</b></span>
-                      </div>
-                      {stat.warning && <AlertCircle size={16} className="text-orange-500 ml-2" title="TOTAL 列與系統加總不符" />}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
-                  <h3 className="font-bold text-blue-800 mb-3 text-sm">彙總數據計算 (將帶入 SI Sheet)</h3>
-                  <div className="grid grid-cols-4 gap-4 text-center">
-                    <div>
-                      <p className="text-xs text-blue-600 font-semibold mb-1">總箱數 (CTNS)</p>
-                      <p className="text-xl font-bold text-blue-900">{totals.ctns}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-blue-600 font-semibold mb-1">總雙數 (PRS)</p>
-                      <p className="text-xl font-bold text-blue-900">{totals.prs}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-blue-600 font-semibold mb-1">總毛重 (G.W.)</p>
-                      <p className="text-xl font-bold text-blue-900">{totals.gw.toFixed(2)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-blue-600 font-semibold mb-1">總體積 (CBM)</p>
-                      <p className="text-xl font-bold text-blue-900">{totals.cbm.toFixed(6)}</p>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </div>
