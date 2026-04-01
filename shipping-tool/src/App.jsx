@@ -76,6 +76,12 @@ export default function App() {
   const [selectedConsignee, setSelectedConsignee] = useState('');
   const [isCustomConsignee, setIsCustomConsignee] = useState(false);
   const [orderNoList, setOrderNoList] = useState([]);
+  const [factoryNames, setFactoryNames] = useState([]);
+  const [factorySelections, setFactorySelections] = useState({
+    fwdPayment: '',
+    arrangeTransport: '',
+    customsClearance: ''
+  });
 
   // 當上傳檔案變更時，即時解析預覽資料
   useEffect(() => {
@@ -94,6 +100,7 @@ export default function App() {
       let parsedWbs = [];
       let stats =[];
       let allOrders = new Set();
+      let factoryNameSet = new Set();
 
       for (const file of uploadedFiles) {
         try {
@@ -104,6 +111,8 @@ export default function App() {
           let plSheet = wb.worksheets.find(s => 
             s.name.includes('PL') || s.name.includes('SDL') || s.name.includes('SY') || s.name.includes('聖達龍') || s.name.includes('森源')
           ) || wb.worksheets[0];
+          
+          factoryNameSet.add(plSheet.name);
 
           let inDataSection = false;
           let fileCTNS = 0, filePRS = 0, fileGW = 0, fileCBM = 0;
@@ -174,6 +183,8 @@ export default function App() {
       setFileStats(stats);
       setOriginalWorkbooks(parsedWbs);
       setOrderNoList(Array.from(allOrders));
+      factoryNameSet.add('凱安');
+      setFactoryNames(Array.from(factoryNameSet));
       setFormData(prev => ({ ...prev, orderNo: Array.from(allOrders).join(', ') }));
       setIsProcessing(false);
     };
@@ -410,6 +421,52 @@ export default function App() {
     const selectedCol = shippingOptions[formData.shippingDoc];
     if (selectedCol) {
       siSheet.getCell(`${selectedCol}${rowOffset}`).value = `V`;
+    }
+
+    // 輸出工廠勾選資料表 (Row 53-56)
+    if (factoryNames.length > 0) {
+      rowOffset++;
+      rowOffset++; // 空行
+      
+      // Row 1: 表頭 (凱安, 工廠1, 工廠2...)
+      siSheet.getCell(`D${rowOffset}`).value = factoryNames[0];
+      for (let i = 1; i < factoryNames.length; i++) {
+        const col = String.fromCharCode(68 + i); // D=68, E=69...
+        siSheet.getCell(`${col}${rowOffset}`).value = factoryNames[i];
+      }
+      rowOffset++;
+      
+      // Row 2: FWD費用由哪方付款
+      siSheet.getCell(`B${rowOffset}`).value = 'FWD 費用由哪方付款';
+      if (factorySelections.fwdPayment) {
+        const idx = factoryNames.indexOf(factorySelections.fwdPayment);
+        if (idx >= 0) {
+          const col = String.fromCharCode(68 + idx);
+          siSheet.getCell(`${col}${rowOffset}`).value = 'V';
+        }
+      }
+      rowOffset++;
+      
+      // Row 3: 負責安排運輸
+      siSheet.getCell(`B${rowOffset}`).value = '負責安排運輸';
+      if (factorySelections.arrangeTransport) {
+        const idx = factoryNames.indexOf(factorySelections.arrangeTransport);
+        if (idx >= 0) {
+          const col = String.fromCharCode(68 + idx);
+          siSheet.getCell(`${col}${rowOffset}`).value = 'V';
+        }
+      }
+      rowOffset++;
+      
+      // Row 4: 負責報關
+      siSheet.getCell(`B${rowOffset}`).value = '負責報關';
+      if (factorySelections.customsClearance) {
+        const idx = factoryNames.indexOf(factorySelections.customsClearance);
+        if (idx >= 0) {
+          const col = String.fromCharCode(68 + idx);
+          siSheet.getCell(`${col}${rowOffset}`).value = 'V';
+        }
+      }
     }
 
     // SI Sheet 設為無框線、無填滿
@@ -872,6 +929,69 @@ export default function App() {
                 </div>
               </div>
             </div>
+
+            {/* 工廠勾選表格 */}
+            {factoryNames.length > 0 && (
+              <div className="pt-4 border-t">
+                <h3 className="text-lg font-bold border-b pb-2 mb-4">勾選資料</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-sm">
+                    <thead>
+                      <tr>
+                        <th className="border bg-gray-100 p-2 text-left">項目</th>
+                        {factoryNames.map(name => (
+                          <th key={name} className="border bg-gray-100 p-2 text-center">{name}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="border p-2 font-medium">FWD 費用由哪方付款</td>
+                        {factoryNames.map(name => (
+                          <td key={name} className="border p-2 text-center">
+                            <input 
+                              type="radio" 
+                              name="fwdPayment"
+                              checked={factorySelections.fwdPayment === name}
+                              onChange={() => setFactorySelections(prev => ({ ...prev, fwdPayment: name }))}
+                              className="w-4 h-4 text-blue-600"
+                            />
+                          </td>
+                        ))}
+                      </tr>
+                      <tr>
+                        <td className="border p-2 font-medium">負責安排運輸</td>
+                        {factoryNames.map(name => (
+                          <td key={name} className="border p-2 text-center">
+                            <input 
+                              type="radio" 
+                              name="arrangeTransport"
+                              checked={factorySelections.arrangeTransport === name}
+                              onChange={() => setFactorySelections(prev => ({ ...prev, arrangeTransport: name }))}
+                              className="w-4 h-4 text-blue-600"
+                            />
+                          </td>
+                        ))}
+                      </tr>
+                      <tr>
+                        <td className="border p-2 font-medium">負責報關</td>
+                        {factoryNames.map(name => (
+                          <td key={name} className="border p-2 text-center">
+                            <input 
+                              type="radio" 
+                              name="customsClearance"
+                              checked={factorySelections.customsClearance === name}
+                              onChange={() => setFactorySelections(prev => ({ ...prev, customsClearance: name }))}
+                              className="w-4 h-4 text-blue-600"
+                            />
+                          </td>
+                        ))}
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
         </div>
       </div>
     </div>
