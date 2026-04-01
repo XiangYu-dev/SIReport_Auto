@@ -15,10 +15,7 @@ import CONSIGNEE_DB from '../resource/ConsigneeList.json';
   let rowFROM = rowNOTIFY+4;
   let rowMARKS = rowFROM+2;
   let rowORDERNO = rowMARKS+1;
-  let rowGW = rowMARKS+1;
-  let rowCBM = rowGW+1;
-  let rowQTY = rowCBM+1;
-  let rowCTNS = rowQTY+1;
+  let rowGW = rowMARKS+2;
 
   let rowCARGOREADYDATE = rowMARKS+12;
   let rowSHIPPEDBY = rowCARGOREADYDATE+1;
@@ -109,7 +106,7 @@ export default function App() {
           ) || wb.worksheets[0];
 
           let inDataSection = false;
-          let fileCTNS = 0, filePRS = 0;
+          let fileCTNS = 0, filePRS = 0, fileGW = 0, fileCBM = 0;
           let orderSet = new Set();
           let totalRowFound = null;
 
@@ -124,7 +121,8 @@ export default function App() {
               return;
             }
 
-            if (cell1.includes('TOTAL') || cell2.includes('TOTAL')) {
+            if (cell1.includes('TOTAL') || cell2.includes('TOTAL') ||
+                cell1.includes('SIZE') || cell1 === 'P' || cell1.includes("P.O.NO")) {
               totalRowFound = row;
               return;
             }
@@ -151,6 +149,8 @@ export default function App() {
             
             fileCTNS += ctn;
             filePRS += prs;
+            fileGW += parseFloat(rowData[14]) || 0;
+            fileCBM += parseFloat(rowData[18]) || 0;
             tCTNS += ctn;
             tPRS += prs;
             tGW += parseFloat(rowData[14]) || 0;  // GROSS TOTAL
@@ -163,7 +163,7 @@ export default function App() {
             if (origCTN > 0 && Math.abs(origCTN - fileCTNS) > 0.1) warning = true;
           }
 
-          stats.push({ name: file.name, orders: orderSet.size, ctns: fileCTNS, prs: filePRS, warning });
+          stats.push({ name: file.name, orders: orderSet.size, ctns: fileCTNS, prs: filePRS, gw: fileGW, cbm: fileCBM, warning });
         } catch (err) {
           console.error("解析檔案失敗:", file.name, err);
         }
@@ -194,8 +194,41 @@ export default function App() {
     // ==========================================
     // 1. 產生 SI Sheet
     // ==========================================
-    const siSheet = newWb.addWorksheet('SI', { views:[{ showGridLines: true }] });
-    siSheet.columns = Array(9).fill({ width: 16 });
+    const siSheet = newWb.addWorksheet('SI', { 
+      views:[{ showGridLines: true, zoomScale: 85 }] 
+    });
+    
+    siSheet.pageSetup = {
+      orientation: 'portrait',
+      paperSize: 9,
+      scale: 100,
+      fitToWidth: 1,
+      fitToHeight: 1,
+      horizontalCentered: true,
+      verticalCentered: false,
+      margins: {
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        header: 0,
+        footer: 0
+      },
+      showGridLines: false,
+      showRowColHeaders: false
+    };
+    
+    siSheet.columns = [
+      { width: 16.11 },   // A
+      { width: 10.33 },   // B
+      { width: 9 },       // C
+      { width: 10.11 },   // D
+      { width: 10.33 },   // E
+      { width: 9.22 },    // F
+      { width: 9 },       // G
+      { width: 15.66 },   // H
+      { width: 10 },      // I
+    ];
 
     siSheet.getCell(`A${rowStart}`).value = 'SHIPMENT INSTRUCTION';
     siSheet.getCell(`A${rowStart}`).font = { size: 14, bold: true, underline: true };
@@ -239,19 +272,75 @@ export default function App() {
       siSheet.getCell(`${col}${rowORDERNO + rowOffset}`).value = po;
     });
 
-    siSheet.getCell(`H${rowGW}`).value = 'G.W.(kgs) :';
-    siSheet.getCell(`I${rowGW}`).value = totals.gw;
-    siSheet.getCell(`I${rowGW}`).numFmt = '0.00';
+    const writeStats = (startRow, statsArray, isTotal = false) => {
+      let currentRow = startRow;
+      
+      for (const stat of statsArray) {
+        const factoryName = stat.sheetName || stat.name.replace('.xlsx', '');
+        siSheet.getCell(`I${currentRow}`).value = factoryName;
+        currentRow++;
+        
+        siSheet.getCell(`H${currentRow}`).value = 'G.W.(kgs) :';
+        siSheet.getCell(`I${currentRow}`).value = stat.gw;
+        siSheet.getCell(`I${currentRow}`).numFmt = '0.00';
+        currentRow++;
+        
+        siSheet.getCell(`H${currentRow}`).value = 'CBM:';
+        siSheet.getCell(`I${currentRow}`).value = stat.cbm;
+        siSheet.getCell(`I${currentRow}`).numFmt = '0.000000';
+        currentRow++;
+        
+        siSheet.getCell(`H${currentRow}`).value = "Q'NTY(prs) :";
+        siSheet.getCell(`I${currentRow}`).value = stat.prs;
+        currentRow++;
+        
+        siSheet.getCell(`H${currentRow}`).value = 'CTNS:';
+        siSheet.getCell(`I${currentRow}`).value = stat.ctns;
+        currentRow++;
+      }
+      
+      if (isTotal) {
+        siSheet.getCell(`I${currentRow}`).value = '加總';
+        currentRow++;
+        
+        siSheet.getCell(`H${currentRow}`).value = 'G.W.(kgs) :';
+        siSheet.getCell(`I${currentRow}`).value = totals.gw;
+        siSheet.getCell(`I${currentRow}`).numFmt = '0.00';
+        currentRow++;
+        
+        siSheet.getCell(`H${currentRow}`).value = 'CBM:';
+        siSheet.getCell(`I${currentRow}`).value = totals.cbm;
+        siSheet.getCell(`I${currentRow}`).numFmt = '0.000000';
+        currentRow++;
+        
+        siSheet.getCell(`H${currentRow}`).value = "Q'NTY(prs) :";
+        siSheet.getCell(`I${currentRow}`).value = totals.prs;
+        currentRow++;
+        
+        siSheet.getCell(`H${currentRow}`).value = 'CTNS:';
+        siSheet.getCell(`I${currentRow}`).value = totals.ctns;
+        currentRow++;
+      }
+      
+      return currentRow;
+    };
 
-    siSheet.getCell(`H${rowCBM}`).value = 'CBM:';
-    siSheet.getCell(`I${rowCBM}`).value = totals.cbm;
-    siSheet.getCell(`I${rowCBM}`).numFmt = '0.000000';
+    const fileStatsWithSheetName = fileStats.map((stat, idx) => {
+      const wb = originalWorkbooks[idx];
+      if (wb && wb.wb.worksheets.length > 0) {
+        const plSheet = wb.wb.worksheets.find(s => 
+          s.name.includes('PL') || s.name.includes('SDL') || s.name.includes('SY') || s.name.includes('聖達龍') || s.name.includes('森源')
+        ) || wb.wb.worksheets[0];
+        return { ...stat, sheetName: plSheet.name };
+      }
+      return { ...stat, sheetName: stat.name.replace('.xlsx', '') };
+    });
 
-    siSheet.getCell(`H${rowQTY}`).value = "Q'NTY(prs) :";
-    siSheet.getCell(`I${rowQTY}`).value = totals.prs;
-
-    siSheet.getCell(`H${rowCTNS}`).value = 'CTNS:';
-    siSheet.getCell(`I${rowCTNS}`).value = totals.ctns;
+    if (fileStatsWithSheetName.length === 1) {
+      writeStats(rowGW, fileStatsWithSheetName, true);
+    } else {
+      writeStats(rowGW, fileStatsWithSheetName, true);
+    }
 
     siSheet.getCell(`C${rowCARGOREADYDATE-5}`).value = '"FREIGHT COLLECT"';
     siSheet.getCell(`C${rowCARGOREADYDATE-3}`).value = '"WE HEREBY CERTIFY THAT THIS SHIPMENT';
@@ -289,6 +378,35 @@ export default function App() {
         rowOffset += lines.length + 2;
       }
     });
+
+    // 填入其他資訊
+    siSheet.getCell(`A${rowOffset}`).value = `需否申請 CO :`;
+    siSheet.getCell(`B${rowOffset}`).value = formData.needCO;
+    rowOffset++;
+
+    siSheet.getCell(`A${rowOffset}`).value = `文件負責方:`;
+    siSheet.getCell(`B${rowOffset}`).value = formData.documentOwner;
+    rowOffset++;
+
+    siSheet.getCell(`A${rowOffset}`).value = `船運單:`;
+    siSheet.getCell(`B${rowOffset}`).value = `正本 BL`;
+    siSheet.getCell(`C${rowOffset}`).value = `電放 BL`;
+    siSheet.getCell(`D${rowOffset}`).value = `正本 FCR`;
+    siSheet.getCell(`E${rowOffset}`).value = `電放 FCR`;
+    siSheet.getCell(`F${rowOffset}`).value = `Sea Willbill`;
+    rowOffset++;
+
+    const shippingOptions = {
+      'BL_original': 'B',
+      'BL_telex': 'C',
+      'FCR_original': 'D',
+      'FCR_telex': 'E',
+      'Sea_Willbill': 'F'
+    };
+    const selectedCol = shippingOptions[formData.shippingDoc];
+    if (selectedCol) {
+      siSheet.getCell(`${selectedCol}${rowOffset}`).value = `V`;
+    }
 
     // SI Sheet 設為無框線、無填滿
     siSheet.eachRow((row) => {
@@ -638,12 +756,20 @@ export default function App() {
               
               <div className="mb-4">
                 <label className="block text-sm font-semibold text-gray-700 mb-1">需否申請 CO</label>
-                <input className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.needCO} onChange={e => setFormData({...formData, needCO: e.target.value})} />
+                <select className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.needCO} onChange={e => setFormData({...formData, needCO: e.target.value})}>
+                  <option value="">請選擇</option>
+                  <option value="不需">不需</option>
+                  <option value="需要">需要</option>
+                </select>
               </div>
 
               <div className="mb-4">
                 <label className="block text-sm font-semibold text-gray-700 mb-1">文件負責方</label>
-                <input className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.documentOwner} onChange={e => setFormData({...formData, documentOwner: e.target.value})} />
+                <select className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.documentOwner} onChange={e => setFormData({...formData, documentOwner: e.target.value})}>
+                  <option value="">請選擇</option>
+                  <option value="巨瑞">巨瑞</option>
+                  <option value="其他">其他</option>
+                </select>
               </div>
 
               <div>
