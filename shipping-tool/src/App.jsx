@@ -607,7 +607,7 @@ export default function App() {
         {/* 區塊1: 出貨文件自動化系統 - 懸空至頂 */}
         <div className="sticky top-0 z-50 bg-gradient-to-r from-blue-600 to-blue-700 p-4 md:p-6 rounded-2xl shadow-lg flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-center md:text-left">
-            <h1 className="text-3xl md:text-4xl font-bold text-white">文件自動化系統</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-white">文件自動化系統 v1.0</h1>
             <p className="text-blue-100 mt-2 text-lg">前端解析與合併 PI Excel</p>
           </div>
           <button 
