@@ -112,7 +112,7 @@ export default function App() {
             s.name.includes('PL') || s.name.includes('SDL') || s.name.includes('SY') || s.name.includes('聖達龍') || s.name.includes('森源')
           ) || wb.worksheets[0];
           
-          factoryNameSet.add(plSheet.name);
+          factoryNameSet.add(file.name.replace('.xlsx', ''));
 
           let inDataSection = false;
           let fileCTNS = 0, filePRS = 0, fileGW = 0, fileCBM = 0;
@@ -130,8 +130,8 @@ export default function App() {
               return;
             }
 
-            if (cell1.includes('TOTAL') || cell2.includes('TOTAL') ||
-                cell1.includes('SIZE') || cell1 === 'P' || cell1.includes("P.O.NO")) {
+            // 找到 TOTAL 行並記錄，直接從該行讀取數據
+            if (cell1.includes('TOTAL') ||cell1.includes("TOTAL:")) {
               totalRowFound = row;
               return;
             }
@@ -152,19 +152,20 @@ export default function App() {
               orderSet.add(rowData[0]);
               allOrders.add(rowData[0]);
             }
-
-            const ctn = parseFloat(rowData[7]) || 0;
-            const prs = parseFloat(rowData[9]) || 0;
-            
-            fileCTNS += ctn;
-            filePRS += prs;
-            fileGW += parseFloat(rowData[14]) || 0;
-            fileCBM += parseFloat(rowData[18]) || 0;
-            tCTNS += ctn;
-            tPRS += prs;
-            tGW += parseFloat(rowData[14]) || 0;  // GROSS TOTAL
-            tCBM += parseFloat(rowData[18]) || 0; // CBM
           });
+
+          // 從 TOTAL row 讀取數據
+          if (totalRowFound) {
+            fileCTNS = parseFloat(getCellText(totalRowFound.getCell(8))) || 0;
+            filePRS = parseFloat(getCellText(totalRowFound.getCell(10))) || 0;
+            fileGW = parseFloat(getCellText(totalRowFound.getCell(15))) || 0; // GROSS
+            fileCBM = parseFloat(getCellText(totalRowFound.getCell(19))) || 0;
+            
+            tCTNS += fileCTNS;
+            tPRS += filePRS;
+            tGW += fileGW;
+            tCBM += fileCBM;
+          }
 
           let warning = false;
           if (totalRowFound) {
@@ -287,7 +288,7 @@ export default function App() {
       let currentRow = startRow;
       
       for (const stat of statsArray) {
-        const factoryName = stat.sheetName || stat.name.replace('.xlsx', '');
+        const factoryName = stat.name.replace('.xlsx', '');
         siSheet.getCell(`I${currentRow}`).value = factoryName;
         currentRow++;
         
@@ -567,19 +568,27 @@ export default function App() {
     });
 
     // ==========================================
-    // 3. 複製原始 Sheets
+    // 3. 複製原始 Sheets - 只複製 PL 工作表
     // ==========================================
     originalWorkbooks.forEach(({ file, wb }) => {
-      const prefix = file.name.split('_')[0].replace('.xlsx', '');
-      wb.eachSheet((s) => {
-        let finalName = s.name;
-        while (newWb.getWorksheet(finalName)) {
-          finalName = `${s.name}_${prefix}`;
-        }
-        const clonedSheet = newWb.addWorksheet(finalName);
-        clonedSheet.model = Object.assign({}, s.model, { name: finalName });
-        clonedSheet.properties.tabColor = { argb: 'FF808080' }; // 標籤灰色
-      });
+      if (!file || !wb) return;
+      try {
+        const prefix = file.name.split('.xlsx')[0];
+        wb.eachSheet((s) => {
+          try {
+            if (s.name === 'PL' || s.name.includes('PL-')) {
+              const finalName = `PL-${prefix}`;
+              const clonedSheet = newWb.addWorksheet(finalName);
+              clonedSheet.model = Object.assign({}, s.model, { name: finalName });
+              clonedSheet.properties.tabColor = { argb: 'FF808080' };
+            }
+          } catch (sheetErr) {
+            console.warn('複製 sheet 失敗:', s.name, sheetErr);
+          }
+        });
+      } catch (err) {
+        console.warn('處理原始檔案失敗:', file.name, err);
+      }
     });
 
     // 下載檔案
