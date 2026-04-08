@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
-import { UploadCloud, Trash2, CheckCircle, AlertCircle, FileSpreadsheet } from 'lucide-react';
+import { UploadCloud, Trash2, CheckCircle, AlertCircle, FileSpreadsheet, Download } from 'lucide-react';
 import { FACTORY_DB } from '../resource/FactoryList';
 import CONSIGNEE_DB from '../resource/ConsigneeList.json';
 
@@ -82,6 +82,26 @@ export default function App() {
     arrangeTransport: '',
     customsClearance: ''
   });
+  const [validationErrors, setValidationErrors] = useState({
+    factory: '',
+    consignee: ''
+  });
+  const [generationState, setGenerationState] = useState('idle'); // 'idle' | 'generating' | 'success'
+  const [generatedBlob, setGeneratedBlob] = useState(null);
+  const [generatedFileName, setGeneratedFileName] = useState('');
+
+  // 檢核表單
+  const validateForm = () => {
+    const errors = {};
+    if (formData.factories.length === 0) {
+      errors.factory = '請至少選擇一個工廠';
+    }
+    if (!formData.consignee || formData.consignee === '請選擇') {
+      errors.consignee = '請選擇 Consignee';
+    }
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   // 當上傳檔案變更時，即時解析預覽資料
   useEffect(() => {
@@ -118,6 +138,7 @@ export default function App() {
           let fileCTNS = 0, filePRS = 0, fileGW = 0, fileCBM = 0;
           let orderSet = new Set();
           let totalRowFound = null;
+          let isAfterTotal = false;
 
           plSheet.eachRow((row) => {
             const cell1 = getCellText(row.getCell(1)).trim().toUpperCase();
@@ -131,8 +152,9 @@ export default function App() {
             }
 
             // 找到 TOTAL 行並記錄，直接從該行讀取數據
-            if (cell1.includes('TOTAL') ||cell1.includes("TOTAL:")) {
+            if (cell1.includes('TOTAL') || cell1.includes("TOTAL:")) {
               totalRowFound = row;
+              isAfterTotal = true;
               return;
             }
 
@@ -147,8 +169,9 @@ export default function App() {
 
             if (rowIsEmpty) return;
 
-            tempMerged.push(rowData);
-            if (rowData[0]) {
+            // 只收集 TOTAL 前的資料
+            if (!isAfterTotal && rowData[0]) {
+              tempMerged.push(rowData);
               orderSet.add(rowData[0]);
               allOrders.add(rowData[0]);
             }
@@ -201,7 +224,13 @@ export default function App() {
   };
 
   const generateExcel = async () => {
-    const newWb = new ExcelJS.Workbook();
+    if (!validateForm()) {
+      return;
+    }
+    
+    setGenerationState('generating');
+    try {
+      const newWb = new ExcelJS.Workbook();
     
     // ==========================================
     // 1. 產生 SI Sheet
@@ -595,7 +624,23 @@ export default function App() {
     const buffer = await newWb.xlsx.writeBuffer();
     const factorySuffix = formData.factories.map(f => FACTORY_DB[f].shortName).join('_');
     const outName = `PI_${formData.pi}${factorySuffix ? '_' + factorySuffix : ''}.xlsx`;
-    saveAs(new Blob([buffer]), outName);
+    setGeneratedBlob(new Blob([buffer]));
+    setGeneratedFileName(outName);
+    setGenerationState('success');
+    } catch (err) {
+      console.error('產生檔案失敗:', err);
+      alert('產生檔案失敗，請重試');
+      setGenerationState('idle');
+    }
+  };
+
+  const handleDownload = () => {
+    if (generatedBlob && generatedFileName) {
+      saveAs(generatedBlob, generatedFileName);
+      setGenerationState('idle');
+      setGeneratedBlob(null);
+      setGeneratedFileName('');
+    }
   };
 
   const isFormValid = formData.pi && formData.date && uploadedFiles.length > 0;
@@ -734,7 +779,7 @@ export default function App() {
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">Consignee</label>
               <select 
-                className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                className={`w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none ${validationErrors.consignee ? 'border-red-500' : ''}`}
                 value={isCustomConsignee ? 'custom' : selectedConsignee}
                 onChange={(e) => {
                   if (e.target.value === 'custom') {
@@ -764,6 +809,7 @@ export default function App() {
                 ))}
                 <option value="custom">自訂</option>
               </select>
+              {validationErrors.consignee && <p className="text-red-500 text-sm mt-1">{validationErrors.consignee}</p>}
             </div>
 
             <div>
@@ -877,6 +923,7 @@ export default function App() {
                   );
                 })}
               </div>
+              {validationErrors.factory && <p className="text-red-500 text-sm mt-2">{validationErrors.factory}</p>}
             </div>
 
             <div className="pt-4 border-t">
@@ -1003,6 +1050,32 @@ export default function App() {
             )}
         </div>
       </div>
+
+      {/* Loading 遮罩 */}
+      {generationState !== 'idle' && (
+        <div className="fixed inset-0 bg-gray-200 bg-opacity-80 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 flex flex-col items-center shadow-xl min-w-[250px]">
+            {generationState === 'generating' ? (
+              <>
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mb-4"></div>
+                <p className="text-lg font-semibold text-gray-800">檔案產製中...</p>
+              </>
+            ) : (
+              <>
+                <CheckCircle className="text-green-500 mb-4" size={48} />
+                <p className="text-lg font-semibold text-gray-800 mb-4">產製成功</p>
+                <button 
+                  onClick={handleDownload}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg flex items-center gap-2 font-semibold"
+                >
+                  <Download size={20} />
+                  下載檔案
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
