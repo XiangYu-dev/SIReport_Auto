@@ -39,7 +39,7 @@ const getCellText = (cell) => {
 export default function App() {
   const [formData, setFormData] = useState({
     pi: 'TE-694',
-    date: '2025-12-15',
+    date: new Date().toISOString().split('T')[0],
     fm: '巨瑞/Michelle',
     to: 'K&A/Sandra',
     shipper: 'GROWTH UP LIMITED',
