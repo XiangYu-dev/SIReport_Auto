@@ -15,7 +15,7 @@ import CONSIGNEE_DB from '../resource/ConsigneeList.json';
   let rowFROM = rowNOTIFY+4;
   let rowMARKS = rowFROM+2;
   let rowORDERNO = rowMARKS+1;
-  let rowGW = rowMARKS+2;
+  let rowGW = rowMARKS;
 
   let rowCARGOREADYDATE = rowMARKS+12;
   let rowSHIPPEDBY = rowCARGOREADYDATE+1;
@@ -93,12 +93,30 @@ export default function App() {
   // 檢核表單
   const validateForm = () => {
     const errors = {};
+    
+    // 取得所有工廠名稱列表（從 FACTORY_DB 的 name 欄位）
+    const allFactoryNames = Object.values(FACTORY_DB).map(f => f.name);
+    
+    // 取得已被選擇的工廠名稱
+    const selectedFactoryNames = formData.factories
+      .map(f => FACTORY_DB[f]?.name)
+      .filter(Boolean);
+    
+    // 檢查是否有從 PL 工作表取得的工廠，卻未被勾選
+    const missingFactories = factoryNames.filter(fn => 
+      allFactoryNames.includes(fn) && !selectedFactoryNames.includes(fn)
+    );
+    
     if (formData.factories.length === 0) {
       errors.factory = '請至少選擇一個工廠';
+    } else if (missingFactories.length > 0) {
+      errors.factory = `以下工廠未勾選：${missingFactories.join(', ')}`;
     }
+    
     if (!formData.consignee || formData.consignee === '請選擇') {
       errors.consignee = '請選擇 Consignee';
     }
+    
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -129,10 +147,17 @@ export default function App() {
           parsedWbs.push({ file, wb });
 
           let plSheet = wb.worksheets.find(s => 
-            s.name.includes('PL') || s.name.includes('SDL') || s.name.includes('SY') || s.name.includes('聖達龍') || s.name.includes('森源')
+            s.name.includes('PL')
           ) || wb.worksheets[0];
           
-          factoryNameSet.add(file.name.replace('.xlsx', ''));
+          // 從工作表名稱解析工廠名稱 (PL_工廠名稱、PL-工廠名稱、PL 工廠名稱)
+          const sheetName = plSheet.name.trim();
+          const match = sheetName.match(/^PL[-_\s]+(.+)$/i);
+          let fileFactoryName = '';
+          if (match) {
+            fileFactoryName = match[1];
+            factoryNameSet.add(match[1]);
+          }
 
           let inDataSection = false;
           let fileCTNS = 0, filePRS = 0, fileGW = 0, fileCBM = 0;
@@ -169,8 +194,8 @@ export default function App() {
 
             if (rowIsEmpty) return;
 
-            // 只收集 TOTAL 前的資料
-            if (!isAfterTotal && rowData[0]) {
+            // 只收集 TOTAL 前的資料（且排除 P.O.NO 標題行）
+            if (!isAfterTotal && rowData[0] && cell1 !== 'P.O.NO') {
               tempMerged.push(rowData);
               orderSet.add(rowData[0]);
               allOrders.add(rowData[0]);
@@ -196,7 +221,7 @@ export default function App() {
             if (origCTN > 0 && Math.abs(origCTN - fileCTNS) > 0.1) warning = true;
           }
 
-          stats.push({ name: file.name, orders: orderSet.size, ctns: fileCTNS, prs: filePRS, gw: fileGW, cbm: fileCBM, warning });
+          stats.push({ name: file.name, factoryName: fileFactoryName, orders: orderSet.size, ctns: fileCTNS, prs: filePRS, gw: fileGW, cbm: fileCBM, warning });
         } catch (err) {
           console.error("解析檔案失敗:", file.name, err);
         }
@@ -292,8 +317,9 @@ export default function App() {
     const notifyLines = formData.notify.split('\n');
     siSheet.getCell(`A${rowNOTIFY}`).value = 'NOTIFY :';
     siSheet.getCell(`B${rowNOTIFY}`).value = notifyLines[0] || '';
-    siSheet.getCell(`B${rowNOTIFY+1}`).value = notifyLines.slice(1).join('\n');
-
+    siSheet.getCell(`B${rowNOTIFY+1}`).value = notifyLines[1]|| '';
+    siSheet.getCell(`B${rowNOTIFY+2}`).value = notifyLines[2]|| '';
+    console.log(notifyLines);
     siSheet.getCell(`A${rowFROM}`).value = `FROM :`;
     siSheet.getCell(`B${rowFROM}`).value = formData.from;
     siSheet.getCell(`D${rowFROM}`).value = `TO :`;
@@ -317,7 +343,7 @@ export default function App() {
       let currentRow = startRow;
       
       for (const stat of statsArray) {
-        const factoryName = stat.name.replace('.xlsx', '');
+        const factoryName = stat.factoryName || stat.name.replace('.xlsx', '');
         siSheet.getCell(`I${currentRow}`).value = factoryName;
         currentRow++;
         
@@ -381,12 +407,8 @@ export default function App() {
       return { ...stat, sheetName: stat.name.replace('.xlsx', '') };
     });
 
-    if (fileStatsWithSheetName.length === 1) {
-      writeStats(rowGW, fileStatsWithSheetName, true);
-    } else {
-      writeStats(rowGW, fileStatsWithSheetName, true);
-    }
-
+    writeStats(rowGW, fileStatsWithSheetName, true);
+    
     siSheet.getCell(`C${rowCARGOREADYDATE-5}`).value = '"FREIGHT COLLECT"';
     siSheet.getCell(`C${rowCARGOREADYDATE-3}`).value = '"WE HEREBY CERTIFY THAT THIS SHIPMENT';
     siSheet.getCell(`C${rowCARGOREADYDATE-2}`).value = 'CONTAINS NO SOLID WOOD PACKING MATERIALS"';
@@ -790,7 +812,7 @@ export default function App() {
                     setSelectedConsignee(e.target.value);
                     const selected = CONSIGNEE_DB[e.target.value];
                     if (selected) {
-                      const notifyText = [selected.notify_name, selected.notify_address, selected.notify_tel ? `TEL: ${selected.notify_tel}` : '', selected.notify_fax ? `FAX:${selected.notify_fax}` : ''].filter(Boolean).join('\n');
+                      const notifyText = [selected.notify_name, selected.notify_address,selected.notify_tel ? `TEL: ${selected.notify_tel}` : '', selected.notify_fax ? `FAX:${selected.notify_fax}` : ''].filter(Boolean).join('\n');
                       const forwarderText = [selected.forwarder_name, selected.forwarder_deputy ? selected.forwarder_deputy : '', selected.forwarder_tel ? `T: ${selected.forwarder_tel}` : '', selected.forwarder_email ? `E: ${selected.forwarder_email}` : '', selected.forwarder_address ? `A: ${selected.forwarder_address}` : ''].filter(Boolean).join('\n');
                       setFormData({
                         ...formData,
@@ -933,7 +955,6 @@ export default function App() {
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">需否申請 CO</label>
                   <select className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.needCO} onChange={e => setFormData({...formData, needCO: e.target.value})}>
-                    <option value="">請選擇</option>
                     <option value="不需">不需</option>
                     <option value="需要">需要</option>
                   </select>
@@ -942,7 +963,6 @@ export default function App() {
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">文件負責方</label>
                   <select className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.documentOwner} onChange={e => setFormData({...formData, documentOwner: e.target.value})}>
-                    <option value="">請選擇</option>
                     <option value="巨瑞">巨瑞</option>
                     <option value="其他">其他</option>
                   </select>
