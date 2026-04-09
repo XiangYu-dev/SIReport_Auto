@@ -49,7 +49,7 @@ export default function App() {
     ctns: '',
     cargoReadyDate: new Date().toISOString().split('T')[0],
     shippedBy: '',
-    shippingTerm: '',
+    shippingTerm: 'FOB',
     shippingTerm2: 'SZ',
     forwarder: '',
     needCO: '',
@@ -409,7 +409,7 @@ export default function App() {
       siSheet.getCell(`A${rowCARGOREADYDATE}`).value = `Cargo Ready Date:`;
       siSheet.getCell(`B${rowCARGOREADYDATE}`).value = formData.cargoReadyDate;
       siSheet.getCell(`E${rowCARGOREADYDATE}`).value = `Shipping term:`;
-      siSheet.getCell(`F${rowCARGOREADYDATE}`).value = formData.shippingTerm + ' ' + formData.shippingTerm2;
+      siSheet.getCell(`G${rowCARGOREADYDATE}`).value = formData.shippingTerm + ' ' + formData.shippingTerm2;
 
       // 填入 Forwarder 資訊
       let rowOffset = rowForwarder;
@@ -919,8 +919,8 @@ export default function App() {
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Shipping term2</label>
                  <select className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.shippingTerm2} onChange={e => setFormData({ ...formData, shippingTerm2: e.target.value })}>
-                  <option value="FOB">SZ</option>
-                  <option value="CIF">NINGBO</option>
+                  <option value="SZ">SZ</option>
+                  <option value="NINGBO">NINGBO</option>
                 </select>
                </div>
             </div>
