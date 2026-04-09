@@ -2,6 +2,8 @@
   "GLOBE": {
     "name": "GLOBE FOOTWEAR CORP.",
     "address": "190 WESTFIELD AVENUE WEST ROSELLE PARK, NJ 07204",
+    "attn": "--Erika Bremer",
+    "tel":"--1(414)908-1792",
     "marks": "CS\nNY USA\nPO #\nCASE#\nMADE IN CHINA",
     "notify_name": "DSV AIR & SEA, INC.",
     "notify_address": "100 WALNUT AVENUE, SUITE 405 CLARK, NJ 07066",
@@ -10,22 +12,27 @@
     "forwarder_name": "HECNY Transportation (Shanghai) Ltd - Shenzhen Branch",
     "forwarder_deputy": "Julian Yi",
     "forwarder_tel": "0755-82212591",
+    "forwarder_Fax": "",
     "forwarder_email": "julianyi@hecny.com",
     "forwarder_address": "43/F, International Trade Center Building, No. 3002, Renmin South Road"
   },
-  "TEST1": {
-    "name": "測試客戶A",
-    "address": "測試地址A",
-    "marks": "TA",
-    "notify_name": "測試通知方A",
-    "notify_address": "測試通知地址A",
+  "WEYCO": {
+    "name": "WEYCO GROUP INC.",
+    "address": "333 W.Esabrook Blvd. Glendale, WI 53212",
+    "attn": "Erika Bremer",
+    "tel":"1(414)908-1792",
+    "marks": "STACY ADAMS\nMILWAUKEE U.S.A.\nORDER NO.\nC/NO.\nMADE IN CHINA",
+    "notify_name": "SAME AS CONSIGNEE.",
+    "notify_address": "",
     "notify_tel": "",
     "notify_fax": "",
-    "forwarder_name": "測試貨代A",
-    "forwarder_deputy": "測試聯絡人A",
-    "forwarder_tel": "",
-    "forwarder_email": "",
-    "forwarder_address": ""
+    "forwarder_name": "APL Logistic Shenzhen",
+    "forwarder_deputy": "Jing Pai Lisa Chen cell#1582563216",
+    "forwarder_tel": "86-574-87371212-1650(Jessie)",
+    "forwarder_fax": "86-574-87342511/3511-5113",
+    "forwarder_email": "Maggie_Cui@apllogistics.com Joan_Yang@apllogistics.com",
+    "forwarder_address": "",
+     "forwarder_attn": "Maggie Cui and Joan Yang."
   },
   "TEST2": {
     "name": "測試客戶B",

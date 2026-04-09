@@ -11,7 +11,7 @@ export const FACTORY_DB = {
     address: "地址：广东省江门开平市月山镇深南西路44-52号",
     contact: "生产部黄小姐：13686935188 jiahangdoc@163.com\n开发部许经理：13422673588\nTEL：0750-2725198 FAX：0750-2721829"
   },
-  TEST: {
+  Jing_Pai: {
     name: "測試公司",
     shortName: "TESTC",
     address: "地址：信義路100號",

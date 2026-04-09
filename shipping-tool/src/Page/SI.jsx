@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { UploadCloud, Trash2, CheckCircle, AlertCircle, FileSpreadsheet, Download } from 'lucide-react';
-import { FACTORY_DB } from '../resource/FactoryList.js';
+import FACTORY_DB from '../resource/factoryList.json';
 import CONSIGNEE_DB from '../resource/ConsigneeList.json';
 import { getCellText } from '../Common/utility';
 
@@ -30,7 +30,7 @@ let rowForwarder = rowSHIPPEDBY + 2;
 
 export default function App() {
   const [formData, setFormData] = useState({
-    pi: 'TE-694',
+    pi: '',
     date: new Date().toISOString().split('T')[0],
     fm: '巨瑞/Michelle',
     to: 'K&A/Sandra',
@@ -637,7 +637,7 @@ export default function App() {
       // 下載檔案
       const buffer = await newWb.xlsx.writeBuffer();
       const factorySuffix = formData.factories.map(f => FACTORY_DB[f].shortName).join('_');
-      const outName = `PI_${formData.pi}${factorySuffix ? '_' + factorySuffix : ''}.xlsx`;
+      const outName = `SI_${formData.pi}${factorySuffix ? '_' + factorySuffix : ''}.xlsx`;
       setGeneratedBlob(new Blob([buffer]));
       setGeneratedFileName(outName);
       setGenerationState('success');
@@ -804,10 +804,21 @@ export default function App() {
                   const selected = CONSIGNEE_DB[e.target.value];
                   if (selected) {
                     const notifyText = [selected.notify_name, selected.notify_address, selected.notify_tel ? `TEL: ${selected.notify_tel}` : '', selected.notify_fax ? `FAX:${selected.notify_fax}` : ''].filter(Boolean).join('\n');
-                    const forwarderText = [selected.forwarder_name, selected.forwarder_deputy ? selected.forwarder_deputy : '', selected.forwarder_tel ? `T: ${selected.forwarder_tel}` : '', selected.forwarder_email ? `E: ${selected.forwarder_email}` : '', selected.forwarder_address ? `A: ${selected.forwarder_address}` : ''].filter(Boolean).join('\n');
+                    const forwarderText = [
+                      selected.forwarder_name,
+                      selected.forwarder_deputy ? selected.forwarder_deputy : '',
+                      selected.forwarder_attn ? `attn: ${selected.forwarder_attn}` : '',
+                      selected.forwarder_tel ? `T: ${selected.forwarder_tel}` : '',
+                      selected.forwarder_fax ? `F: ${selected.forwarder_fax}` : '',
+                      selected.forwarder_email ? `em: ${selected.forwarder_email}` : '',
+                      selected.forwarder_address ? `A: ${selected.forwarder_address}` : ''
+                    ].filter(Boolean).join('\n');
                     setFormData({
                       ...formData,
-                      consignee: selected.address,
+                      consignee: selected.name
+                        + selected.address
+                        + (selected.attn ? "\n" + selected.attn : '')
+                        + (selected.tel ? "\n" + selected.tel : ''),
                       notify: notifyText,
                       marks: selected.marks,
                       forwarder: forwarderText
