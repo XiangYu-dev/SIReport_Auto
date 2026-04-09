@@ -47,7 +47,7 @@ export default function App() {
     cbm: '',
     qty: '',
     ctns: '',
-    cargoReadyDate: '2025-12-15',
+    cargoReadyDate: new Date().toISOString().split('T')[0],
     shippedBy: '',
     shippingTerm: '',
     shippingTerm2: 'SZ',
@@ -427,14 +427,18 @@ export default function App() {
         const fData = FACTORY_DB[fKey];
         if (fData) {
           siSheet.getCell(`A${rowOffset}`).value = `Factory :`;
-          siSheet.getCell(`B${rowOffset}`).value = fData.name;
+          
+          const factoryInfo = [
+            fData.name,
+            fData.address,
+            fData.contact
+          ].filter(Boolean).join('\n');
+          
+          siSheet.getCell(`B${rowOffset}`).value = factoryInfo;
           siSheet.getCell(`B${rowOffset}`).font = { bold: true };
-
-          const lines = [...fData.address.split('\n'), ...fData.contact.split('\n')];
-          lines.forEach((line, idx) => {
-            siSheet.getCell(`B${rowOffset + 1 + idx}`).value = line;
-          });
-          rowOffset += lines.length + 2;
+          
+          const lineCount = factoryInfo.split('\n').length;
+          rowOffset += lineCount + 1;
         }
       });
 
@@ -817,8 +821,8 @@ export default function App() {
                       ...formData,
                       consignee: selected.name
                         + selected.address
-                        + (selected.attn ? "\n" + selected.attn : '')
-                        + (selected.tel ? "\n" + selected.tel : ''),
+                        + (selected.attn ? "\n" + `attn: ${selected.attn}` : '')
+                        + (selected.tel ? "\n" + `tel: ${selected.tel}` : ''),
                       notify: notifyText,
                       marks: selected.marks,
                       forwarder: forwarderText
@@ -914,8 +918,11 @@ export default function App() {
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Shipping term2</label>
-                <input className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.shippingTerm2} onChange={e => setFormData({ ...formData, shippingTerm2: e.target.value })} />
-              </div>
+                 <select className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500 outline-none" value={formData.shippingTerm2} onChange={e => setFormData({ ...formData, shippingTerm2: e.target.value })}>
+                  <option value="FOB">SZ</option>
+                  <option value="CIF">NINGBO</option>
+                </select>
+               </div>
             </div>
           </div>
 

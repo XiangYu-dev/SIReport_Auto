@@ -33,19 +33,6 @@
     "forwarder_email": "Maggie_Cui@apllogistics.com Joan_Yang@apllogistics.com",
     "forwarder_address": "",
      "forwarder_attn": "Maggie Cui and Joan Yang."
-  },
-  "TEST2": {
-    "name": "測試客戶B",
-    "address": "測試地址B",
-    "marks": "TB",
-    "notify_name": "測試通知方B",
-    "notify_address": "測試通知地址B",
-    "notify_tel": "",
-    "notify_fax": "",
-    "forwarder_name": "測試貨代B",
-    "forwarder_deputy": "測試聯絡人B",
-    "forwarder_tel": "",
-    "forwarder_email": "",
-    "forwarder_address": ""
   }
+
 }
