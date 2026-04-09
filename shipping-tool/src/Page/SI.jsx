@@ -485,7 +485,7 @@ export default function App() {
         rowOffset++;
 
         // Row 2: FWD費用由哪方付款
-        siSheet.getCell(`B${rowOffset}`).value = 'FWD 費用由哪方付款';
+        siSheet.getCell(`A${rowOffset}`).value = 'FWD 費用由哪方付款';
         if (factorySelections.fwdPayment) {
           const idx = factoryNames.indexOf(factorySelections.fwdPayment);
           if (idx >= 0) {
@@ -496,7 +496,7 @@ export default function App() {
         rowOffset++;
 
         // Row 3: 負責安排運輸
-        siSheet.getCell(`B${rowOffset}`).value = '負責安排運輸';
+        siSheet.getCell(`A${rowOffset}`).value = '負責安排運輸';
         if (factorySelections.arrangeTransport) {
           const idx = factoryNames.indexOf(factorySelections.arrangeTransport);
           if (idx >= 0) {
@@ -507,7 +507,7 @@ export default function App() {
         rowOffset++;
 
         // Row 4: 負責報關
-        siSheet.getCell(`B${rowOffset}`).value = '負責報關';
+        siSheet.getCell(`A${rowOffset}`).value = '負責報關';
         if (factorySelections.customsClearance) {
           const idx = factoryNames.indexOf(factorySelections.customsClearance);
           if (idx >= 0) {
